@@ -13,12 +13,14 @@ type Add2 = (x: number, y: number) => number
 // 函数实现
 let add2: Add2 = (a, b) => a + b
 
+// 混合类型接口
 interface Lib {
     (): void;
     version: string;
     doSomething(): void;
 }
 
+// 创建实例
 function getLib() {
     let lib: Lib = (() => {}) as Lib
     lib.version = '1.0'
@@ -40,7 +42,7 @@ add1 = (x, y) => {
 
 console.log(add1(3,4))
 
-let add3: Add = ((x: number, y: number) => { x + y}) as Add
+let add3: Add = ((x, y) => { x + y }) as Add
 
 interface Test {
     x: number;
