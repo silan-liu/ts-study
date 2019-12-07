@@ -17,7 +17,7 @@ enum Message {
 
 // 异构枚举，混合不同类型
 enum Answer {
-    N,
+    N = 1,
     Y = 'yes'
 }
 
