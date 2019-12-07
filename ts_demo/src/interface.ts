@@ -33,3 +33,16 @@ lib1.doSomething()
 
 let lib2 = getLib()
 
+let add1: (x: number, y: number) => number
+add1 = (x, y) => {
+    return x + y
+}
+
+console.log(add1(3,4))
+
+let add3: Add = ((x: number, y: number) => { x + y}) as Add
+
+interface Test {
+    x: number;
+    y: string
+}
