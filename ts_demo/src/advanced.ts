@@ -1,5 +1,4 @@
 let s: string = 'a'
-s = null
 
 // 接口兼容性
 interface X {
@@ -18,6 +17,8 @@ let y1: Y = {a: 1, b: 2, c: 3}
 
 // X 可兼容 Y，属性少的可以兼容属性多的
 x1 = y1
+
+// y1 = x1 // 不可以
 
 // 函数兼容性
 type Handler = (a: number, b: number) => void
@@ -40,8 +41,8 @@ f1 = f2
 f1 = f3
 
 // 可选参数不兼容固定和剩余参数
-f2 = f1
-f2 = f3
+// f2 = f1
+// f2 = f3
 
 // 剩余参数可以兼容固定参数和可选参数
 f3 = f1

@@ -708,3 +708,372 @@ workFlow.step1().step2().step3()
 	}
 	```
 
+### 泛型
+
+泛型可以使函数和类支持多种数据类型，增加程序可扩展性。同时不必重写多条函数重载，类型约束的控制更加灵活。
+
+#### 泛型函数
+
+定义泛型函数 `log`，其泛型类型为 `T`。
+```
+function log<T>(value: T): T {
+    console.log(value)
+    return value
+}
+```
+
+使用时指明类型：
+
+```
+// 指明类型
+log<string>('fsd')
+log<string[]>(['a', 'b'])
+```
+
+使用时不指明类型，编译器进行类型推断：
+
+```
+// 类型推断
+log('dd')
+log(1)
+```
+
+别名函数泛型：
+```
+// 别名函数
+type Log = <T>(value: T) => T
+let myLog: Log = log
+
+myLog('hello')
+```
+
+#### 泛型接口
+
+接口也可以是泛型。
+
+```
+// 泛型接口，定义函数
+interface LogInterface {
+    <T>(value: T): T
+}
+
+// 指定默认类型，`T` 在最外层进行限制，约束接口的所有成员
+interface LogInterface1<T = number> {
+    (value: T): T
+    name: T
+}
+```
+
+使用：
+
+```
+let log1: LogInterface = log
+log1('jel')
+```
+
+#### 泛型类
+
+类中也可以使用泛型。
+
+```
+// 泛型类，不能作用于静态成员
+class Logger<T> {
+    run(value: T) {
+        console.log(value)
+        return value
+    }
+}
+
+let logger1 = new Logger<number>()
+logger1.run(1)
+```
+
+##### 泛型约束
+
+对泛型进行约束，使得只有满足条件的类型可传入。
+
+```
+// 类型约束
+interface Length {
+    length: number
+}
+
+// 约束 T 需要有 length 属性
+function logger<T extends Length>(value: T): T {
+    return value
+}
+
+logger('d')
+logger([1,2,3])
+
+// logger(2) // 无 length 属性，不能传入
+```
+
+### 类型检查
+#### 类型兼容性
+##### 接口兼容性
+成员名相同的情况下，成员个数少的兼容个数多的。
+
+```
+// 接口兼容性
+interface X {
+    a: any
+    b: any
+}
+
+interface Y {
+    a: any
+    b: any
+    c: any
+}
+
+let x1: X = {a: 1, b: 2}
+let y1: Y = {a: 1, b: 2, c: 3}
+
+// X 可兼容 Y，属性少的可以兼容属性多的
+x1 = y1
+
+// 不可以
+// y1 = x1 
+```
+
+##### 函数兼容性
+需满足三个条件。
+
+* 参数个数兼容，参数多兼容参数少。
+* 参数类型兼容，若是对象类型，成员多兼容成员少。
+* 返回值兼容，若是对象类型，成员少兼容成员多。
+
+###### 参数个数
+
+参数多兼容参数少。
+
+```
+type Handler = (a: number, b: number) => void
+function hof(handler:Handler) {
+    return handler
+}
+
+// 1. 参数个数，参数多的可以兼容参数少的
+let handler1 = (a: number) => {}
+hof(handler1)
+
+let handler2 = (a: number, b: number, c: number) => {}
+// hof(handler2)，不可以兼容
+```
+
+固定参数、可选参数、剩余参数之间的兼容：
+
+* 固定参数兼容可选和剩余参数
+* 可选参数不兼容固定和剩余参数
+* 剩余参数可以兼容固定参数和可选参数
+
+```
+let f1 = (p1: number, p2: number) => {}
+let f2 = (p1?: number, p2?: number) => {}
+let f3 = (...args: number[]) => {}
+
+// 固定参数兼容可选和剩余参数
+f1 = f2
+f1 = f3
+
+// 可选参数不兼容固定和剩余参数
+// f2 = f1
+// f2 = f3
+
+// 剩余参数可以兼容固定参数和可选参数
+f3 = f1
+f3 = f2
+```
+
+###### 参数类型
+
+对象类型兼容，成员多的兼容成员少的。
+
+```
+interface Point3D {
+    x: number
+    y: number
+    z: number
+}
+
+interface Point2D {
+    x: number
+    y: number
+}
+
+let p3d = (point: Point3D) => {}
+let p2d = (point: Point2D) => {}
+
+p3d = p2d
+// p2d = p3d //不可以
+```
+
+###### 返回值类型
+
+返回值类型兼容，成员少的兼容成员多的。
+
+```
+let f4 = () => ({name: 'Alice'})
+let f5 = () => ({name: 'Alice', location: 'dd'})
+```
+
+#### 枚举类型兼容
+
+不同枚举类型不兼容，数字枚举与 `number` 完全兼容。
+
+```
+enum Fruit { Apple, Banana }
+enum Color { Red, Yellow }
+
+let fruit: Fruit.Apple = 3
+let n: number = fruit
+```
+
+#### 类兼容
+
+类兼容性，构造函数和静态成员不做比较，如果有同名同类型私有变量，不兼容。
+
+```
+class A {
+    constructor(a: number, b: number) {}
+    id: number = 1
+}
+
+class B {
+    static s = 1
+    constructor(a: number) {}
+    id: number = 1
+}
+
+let aa = new A(1, 2)
+let bb = new B(1)
+
+aa = bb
+bb = aa
+```
+
+#### 泛型兼容
+##### 接口
+泛型兼容性，泛型被成员使用才会影响兼容性。
+```
+// T 被成员使用才会影响兼容性
+interface Empty<T> {
+    value: T
+}
+
+let object1: Empty<string> = {value: 'a'}
+let object2: Empty<number> = {value: 1}
+
+// object1 = object2   // 不可以
+```
+
+##### 函数
+泛型函数兼容，定义相同，没有指定具体类型，则兼容。
+```
+let l1 = <T>(value: T): T => {
+    return value
+}
+
+let l2 = <U>(value: U): U => {
+    return value
+}
+
+l1 = l2
+```
+
+### 类型保护
+
+当遇到变量无法确定属于哪个类型时，需要用到类型判断。
+
+假设我们定义了 `Java` 和 `JavaScript` 两个类，需要正确的调用实例所属的方法。
+
+```
+// 类型保护
+enum Type {
+    Strong,
+    Weak
+}
+
+class Java {
+    helloJava() {
+        console.log('helloJava')
+    }
+
+    java: any
+}
+
+class JavaScript {
+    helloJavaScript() {
+        console.log('helloJavaScript')
+    }
+
+    javascript: any
+}
+```
+
+有如下四种方法判断。
+
+#### instanceof
+
+判断实例属于哪个类。
+
+```
+function getLanguage(type: Type) {
+    let lang = type === Type.Strong ? new Java() : new JavaScript()
+    // instanceof
+    if (lang instanceof Java) {
+        lang.helloJava()
+    } else {
+        lang.helloJavaScript()
+    }
+}
+```
+#### in
+
+判断变量是否属于某个对象。
+
+```
+if ('java' in lang) {
+    lang.helloJava()
+} else {
+    lang.helloJavaScript()
+}
+```
+#### typeof
+
+判断类型。
+
+```
+// typeof
+if (typeof x === 'number') {
+    console.log(x.toFixed(2))
+    console.log('x is number')
+} else  {
+    console.log(x.length)
+    console.log('x is string')
+}
+```
+
+#### 函数类型断言
+
+首先定义断言函数：
+
+```
+// 返回值：类型谓词
+function isJava(lang: Java | JavaScript): lang is Java {
+    return ((lang as Java).helloJava) !== undefined
+}
+```
+
+进行判断：
+
+```
+// 函数类型断言
+if (isJava(lang)) {
+    lang.helloJava()
+} else {
+    lang.helloJavaScript()
+}
+```
+
